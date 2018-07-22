@@ -16,4 +16,8 @@
  * limitations under the License.
  */
 
-package v1beta1
+package minio
+
+const (
+	GroupName = "minio.io"
+)
