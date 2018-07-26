@@ -37,6 +37,7 @@ type MinioInstance struct {
 
 // MinioInstanceSpec is the spec for a MinioInstance resource
 type MinioInstanceSpec struct {
+	StatefulSetName string `json:"statefulSetName"`
 	// Version defines the MinioInstance Docker image version.
 	Version string `json:"version"`
 	// Replicas defines the number of Minio instances in a MinioInstance resource
