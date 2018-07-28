@@ -16,25 +16,29 @@
  * limitations under the License.
  */
 
-package main
+package controller
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/golang/glog"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	appsinformers "k8s.io/client-go/informers/apps/v1"
+	coreinformers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
 	scheme "k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	appslisters "k8s.io/client-go/listers/apps/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	queue "k8s.io/client-go/util/workqueue"
@@ -44,6 +48,8 @@ import (
 	minioscheme "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/scheme"
 	informers "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/minioinstance/v1beta1"
 	listers "github.com/nitisht/minio-operator/pkg/client/listers/minioinstance/v1beta1"
+	services "github.com/nitisht/minio-operator/pkg/resources/services"
+	statefulsets "github.com/nitisht/minio-operator/pkg/resources/statefulsets"
 )
 
 const controllerAgentName = "minio-operator"
@@ -83,6 +89,13 @@ type Controller struct {
 	// has synced at least once.
 	minioInstancesSynced cache.InformerSynced
 
+	// serviceLister is able to list/get Services from a shared informer's
+	// store.
+	serviceLister corelisters.ServiceLister
+	// serviceListerSynced returns true if the Service shared informer
+	// has synced at least once.
+	serviceListerSynced cache.InformerSynced
+
 	// queue is a rate limited work queue. This is used to queue work to be
 	// processed instead of performing it as soon as a change happens. This
 	// means we can ensure we only process a fixed amount of resources at a
@@ -99,7 +112,8 @@ func NewController(
 	kubeClientSet kubernetes.Interface,
 	minioClientSet clientset.Interface,
 	statefulSetInformer appsinformers.StatefulSetInformer,
-	minioInstanceInformer informers.MinioInstanceInformer) *Controller {
+	minioInstanceInformer informers.MinioInstanceInformer,
+	serviceInformer coreinformers.ServiceInformer) *Controller {
 
 	// Create event broadcaster
 	// Add minio-controller types to the default Kubernetes Scheme so Events can be
@@ -118,6 +132,8 @@ func NewController(
 		statefulSetListerSynced: statefulSetInformer.Informer().HasSynced,
 		minioInstancesLister:    minioInstanceInformer.Lister(),
 		minioInstancesSynced:    minioInstanceInformer.Informer().HasSynced,
+		serviceLister:           serviceInformer.Lister(),
+		serviceListerSynced:     serviceInformer.Informer().HasSynced,
 		workqueue:               queue.NewNamedRateLimitingQueue(queue.DefaultControllerRateLimiter(), "MinioInstances"),
 		recorder:                recorder,
 	}
@@ -150,7 +166,6 @@ func NewController(
 		},
 		DeleteFunc: controller.handleObject,
 	})
-
 	return controller
 }
 
@@ -200,7 +215,6 @@ func (c *Controller) processNextWorkItem() bool {
 	if shutdown {
 		return false
 	}
-
 	// We wrap this block in a func so we can defer c.workqueue.Done.
 	err := func(obj interface{}) error {
 		// We call Done here so the workqueue knows we have finished
@@ -241,7 +255,6 @@ func (c *Controller) processNextWorkItem() bool {
 		runtime.HandleError(err)
 		return true
 	}
-
 	return true
 }
 
@@ -256,33 +269,43 @@ func (c *Controller) syncHandler(key string) error {
 		return nil
 	}
 
+	nsName := types.NamespacedName{Namespace: namespace, Name: name}
+
 	// Get the MinioInstance resource with this namespace/name
-	minioInstance, err := c.minioInstancesLister.MinioInstances(namespace).Get(name)
+	mi, err := c.minioInstancesLister.MinioInstances(namespace).Get(name)
 	if err != nil {
 		// The MinioInstance resource may no longer exist, in which case we stop
 		// processing.
 		if errors.IsNotFound(err) {
-			runtime.HandleError(fmt.Errorf("minioInstance '%s' in work queue no longer exists", key))
+			runtime.HandleError(fmt.Errorf("MinioInstance '%s' in work queue no longer exists", key))
 			return nil
 		}
-
 		return err
 	}
 
-	statefulSetName := minioInstance.Spec.StatefulSetName
-	if statefulSetName == "" {
-		// We choose to absorb the error here as the worker would requeue the
-		// resource otherwise. Instead, the next time the resource is updated
-		// the resource will be queued again.
-		runtime.HandleError(fmt.Errorf("%s: StatefulSet name must be specified", key))
-		return nil
+	mi.EnsureDefaults()
+
+	svc, err := c.serviceLister.Services(mi.Namespace).Get(mi.Name)
+	// If the resource doesn't exist, we'll create it
+	if apierrors.IsNotFound(err) {
+		glog.V(2).Infof("Creating a new Service for cluster %q", nsName)
+		svc = services.NewForCluster(mi)
+		_, err = c.kubeClientSet.CoreV1().Services(svc.Namespace).Create(svc)
+	}
+
+	// If an error occurs during Get/Create, we'll requeue the item so we can
+	// attempt processing again later. This could have been caused by a
+	// temporary network failure, or any other transient reason.
+	if err != nil {
+		return err
 	}
 
 	// Get the StatefulSet with the name specified in MinioInstance.spec
-	statefulSet, err := c.statefulSetLister.StatefulSets(minioInstance.Namespace).Get(statefulSetName)
+	ss, err := c.statefulSetLister.StatefulSets(mi.Namespace).Get(mi.Name)
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
-		statefulSet, err = c.kubeClientSet.AppsV1().StatefulSets(minioInstance.Namespace).Create(newStatefulSet(minioInstance))
+		ss = statefulsets.NewForCluster(mi, svc.Name)
+		_, err = c.kubeClientSet.AppsV1().StatefulSets(mi.Namespace).Create(ss)
 	}
 
 	// If an error occurs during Get/Create, we'll requeue the item so we can
@@ -294,18 +317,19 @@ func (c *Controller) syncHandler(key string) error {
 
 	// If the StatefulSet is not controlled by this MinioInstance resource, we should log
 	// a warning to the event recorder and ret
-	if !metav1.IsControlledBy(statefulSet, minioInstance) {
-		msg := fmt.Sprintf(MessageResourceExists, statefulSet.Name)
-		c.recorder.Event(minioInstance, corev1.EventTypeWarning, ErrResourceExists, msg)
+	if !metav1.IsControlledBy(ss, mi) {
+		msg := fmt.Sprintf(MessageResourceExists, ss.Name)
+		c.recorder.Event(mi, corev1.EventTypeWarning, ErrResourceExists, msg)
 		return fmt.Errorf(msg)
 	}
 
 	// If this number of the replicas on the MinioInstance resource is specified, and the
 	// number does not equal the current desired replicas on the StatefulSet, we
 	// should update the StatefulSet resource.
-	if minioInstance.Spec.Replicas != nil && *minioInstance.Spec.Replicas != *statefulSet.Spec.Replicas {
-		glog.V(4).Infof("MinioInstance %s replicas: %d, StatefulSet replicas: %d", name, *minioInstance.Spec.Replicas, *statefulSet.Spec.Replicas)
-		statefulSet, err = c.kubeClientSet.V1().StatefulSets(minioInstance.Namespace).Update(newStatefulSet(minioInstance))
+	if mi.Spec.Replicas != *ss.Spec.Replicas {
+		glog.V(4).Infof("MinioInstance %s replicas: %d, StatefulSet replicas: %d", name, mi.Spec.Replicas, *ss.Spec.Replicas)
+		ss = statefulsets.NewForCluster(mi, svc.Name)
+		_, err = c.kubeClientSet.AppsV1().StatefulSets(mi.Namespace).Update(ss)
 	}
 
 	// If an error occurs during Update, we'll requeue the item so we can
@@ -317,12 +341,12 @@ func (c *Controller) syncHandler(key string) error {
 
 	// Finally, we update the status block of the MinioInstance resource to reflect the
 	// current state of the world
-	err = c.updateMinioInstanceStatus(minioInstance, statefulSet)
+	err = c.updateMinioInstanceStatus(mi, ss)
 	if err != nil {
 		return err
 	}
 
-	c.recorder.Event(minioInstance, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
+	c.recorder.Event(mi, corev1.EventTypeNormal, SuccessSynced, MessageResourceSynced)
 	return nil
 }
 
@@ -331,7 +355,7 @@ func (c *Controller) updateMinioInstanceStatus(minioInstance *miniov1beta1.Minio
 	// You can use DeepCopy() to make a deep copy of original object and modify this copy
 	// Or create a copy manually for better performance
 	minioInstanceCopy := minioInstance.DeepCopy()
-	minioInstanceCopy.Status.AvailableReplicas = statefulSet.Status.AvailableReplicas
+	minioInstanceCopy.Status.AvailableReplicas = statefulSet.Status.Replicas
 	// If the CustomResourceSubresources feature gate is not enabled,
 	// we must use Update instead of UpdateStatus to update the Status block of the MinioInstance resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
@@ -390,47 +414,5 @@ func (c *Controller) handleObject(obj interface{}) {
 
 		c.enqueueMinioInstance(minioInstance)
 		return
-	}
-}
-
-// newStatefulSet creates a new StatefulSet for a MinioInstance resource. It also sets
-// the appropriate OwnerReferences on the resource so handleObject can discover
-// the MinioInstance resource that 'owns' it.
-func newStatefulSet(minioInstance *miniov1beta1.MinioInstance) *appsv1.StatefulSet {
-	labels := map[string]string{
-		"app":        "minio",
-		"controller": minioInstance.Name,
-	}
-	return &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      minioInstance.Spec.StatefulSetName,
-			Namespace: minioInstance.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(minioInstance, schema.GroupVersionKind{
-					Group:   miniov1beta1.SchemeGroupVersion.Group,
-					Version: miniov1beta1.SchemeGroupVersion.Version,
-					Kind:    "MinioInstance",
-				}),
-			},
-		},
-		Spec: appsv1.StatefulSetSpec{
-			Replicas: minioInstance.Spec.Replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "minio",
-							Image: "minio:RELEASE.2018-07-13T00-09-07Z",
-						},
-					},
-				},
-			},
-		},
 	}
 }

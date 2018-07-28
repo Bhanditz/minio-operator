@@ -40,15 +40,22 @@ func Resource(resource string) schema.GroupResource {
 }
 
 var (
+	// SchemeBuilder collects the scheme builder functions for the Minio
+	// Operator API.
 	SchemeBuilder = runtime.NewSchemeBuilder(addKnownTypes)
-	AddToScheme   = SchemeBuilder.AddToScheme
+
+	// AddToScheme applies the SchemeBuilder functions to a specified scheme.
+	AddToScheme = SchemeBuilder.AddToScheme
 )
+
+// ClusterCRDResourceKind is the Kind of a Cluster.
+const ClusterCRDResourceKind = "MinioInstance"
 
 // Adds the list of known types to Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&MinioInstance{},
-		&MinioInstance{},
+		&MinioInstanceList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

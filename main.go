@@ -29,6 +29,7 @@ import (
 
 	clientset "github.com/nitisht/minio-operator/pkg/client/clientset/versioned"
 	informers "github.com/nitisht/minio-operator/pkg/client/informers/externalversions"
+	"github.com/nitisht/minio-operator/pkg/controller"
 	"k8s.io/sample-controller/pkg/signals"
 )
 
@@ -53,20 +54,21 @@ func main() {
 		glog.Fatalf("Error building kubernetes clientset: %s", err.Error())
 	}
 
-	exampleClient, err := clientset.NewForConfig(cfg)
+	controllerClient, err := clientset.NewForConfig(cfg)
 	if err != nil {
 		glog.Fatalf("Error building example clientset: %s", err.Error())
 	}
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
-	exampleInformerFactory := informers.NewSharedInformerFactory(exampleClient, time.Second*30)
+	minioInformerFactory := informers.NewSharedInformerFactory(controllerClient, time.Second*30)
 
-	controller := NewController(kubeClient, exampleClient,
+	controller := controller.NewController(kubeClient, controllerClient,
 		kubeInformerFactory.Apps().V1().StatefulSets(),
-		exampleInformerFactory.Minio().V1beta1().MinioInstances())
+		minioInformerFactory.Minio().V1beta1().MinioInstances(),
+		kubeInformerFactory.Core().V1().Services())
 
 	go kubeInformerFactory.Start(stopCh)
-	go exampleInformerFactory.Start(stopCh)
+	go minioInformerFactory.Start(stopCh)
 
 	if err = controller.Run(2, stopCh); err != nil {
 		glog.Fatalf("Error running controller: %s", err.Error())

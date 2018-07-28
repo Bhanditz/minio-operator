@@ -37,11 +37,10 @@ type MinioInstance struct {
 
 // MinioInstanceSpec is the spec for a MinioInstance resource
 type MinioInstanceSpec struct {
-	StatefulSetName string `json:"statefulSetName"`
 	// Version defines the MinioInstance Docker image version.
 	Version string `json:"version"`
 	// Replicas defines the number of Minio instances in a MinioInstance resource
-	Replicas *int32 `json:"replicas"`
+	Replicas int32 `json:"replicas"`
 	// Mode defines the MinioInstance resource type - valid values are "standalone", "distributed" and "gateway"
 	Mode string `json:"mode"`
 	// VolumeClaimTemplate allows a user to specify how volumes inside a MinioInstance
@@ -58,10 +57,13 @@ type MinioInstanceSpec struct {
 	// If defined, we use this secret as the credentials for MinioInstance resource
 	// If it is not set we generate credentials dynamically
 	// +optional
-	RootPasswordSecret *corev1.LocalObjectReference `json:"rootPasswordSecret,omitempty"`
+	CredsSecret *corev1.LocalObjectReference `json:"credsSecret,omitempty"`
 	// Config allows a user to specify a custom configuration file for MinioInstance.
 	// +optional
-	Config *corev1.LocalObjectReference `json:"config,omitempty"`
+	ConfigSecret *corev1.LocalObjectReference `json:"configSecret,omitempty"`
+	// SSLSecret allows a user to specify custom CA certificate, and private key for group replication SSL.
+	// +optional
+	SSLSecret *corev1.LocalObjectReference `json:"sslSecret,omitempty"`
 }
 
 // MinioInstanceStatus is the status for a MinioInstance resource
