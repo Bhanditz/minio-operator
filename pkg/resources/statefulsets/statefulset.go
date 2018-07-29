@@ -110,7 +110,7 @@ func volumeMounts(mi *miniov1beta1.MinioInstance) []corev1.VolumeMount {
 }
 
 // Builds the Minio container for a MinioInstance.
-func minioServerContainer(mi *miniov1beta1.MinioInstance) corev1.Container {
+func minioServerContainer(mi *miniov1beta1.MinioInstance, serviceName string) corev1.Container {
 	replicas := int(mi.Spec.Replicas)
 
 	scheme := "http"
@@ -123,7 +123,7 @@ func minioServerContainer(mi *miniov1beta1.MinioInstance) corev1.Container {
 	}
 	// append all the MinioInstance replica URLs
 	for i := 0; i < replicas; i++ {
-		args = append(args, fmt.Sprintf("%s://%s-"+strconv.Itoa(i)+".%s.svc.cluster.local%s", scheme, mi.Name, mi.Name, mi.Namespace, constants.MinioVolumeMountPath))
+		args = append(args, fmt.Sprintf("%s://%s-"+strconv.Itoa(i)+".%s.%s.svc.cluster.local%s", scheme, mi.Name, serviceName, mi.Namespace, constants.MinioVolumeMountPath))
 	}
 
 	return corev1.Container{
@@ -209,7 +209,7 @@ func NewForCluster(mi *miniov1beta1.MinioInstance, serviceName string) *appsv1.S
 		})
 	}
 
-	containers := []corev1.Container{minioServerContainer(mi)}
+	containers := []corev1.Container{minioServerContainer(mi, serviceName)}
 
 	podLabels := map[string]string{
 		constants.InstanceLabel: mi.Name,

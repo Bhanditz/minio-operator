@@ -18,7 +18,9 @@
 
 package v1beta1
 
-import constants "github.com/nitisht/minio-operator/pkg/constants"
+import (
+	constants "github.com/nitisht/minio-operator/pkg/constants"
+)
 
 // HasCredsSecret returns true if the user has provided a secret
 // for a MinioInstance else false
