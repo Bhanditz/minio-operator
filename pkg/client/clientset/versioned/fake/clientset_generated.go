@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "github.com/nitisht/minio-operator/pkg/client/clientset/versioned"
-	miniov1beta1 "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/typed/minioinstance/v1beta1"
-	fakeminiov1beta1 "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/typed/minioinstance/v1beta1/fake"
+	miniov1beta1 "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/typed/miniocontroller/v1beta1"
+	fakeminiov1beta1 "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/typed/miniocontroller/v1beta1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

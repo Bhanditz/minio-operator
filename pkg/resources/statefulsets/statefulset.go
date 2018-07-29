@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strconv"
 
-	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/minioinstance/v1beta1"
+	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	constants "github.com/nitisht/minio-operator/pkg/constants"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

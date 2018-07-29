@@ -43,11 +43,11 @@ import (
 	"k8s.io/client-go/tools/record"
 	queue "k8s.io/client-go/util/workqueue"
 
-	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/minioinstance/v1beta1"
+	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	clientset "github.com/nitisht/minio-operator/pkg/client/clientset/versioned"
 	minioscheme "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/scheme"
-	informers "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/minioinstance/v1beta1"
-	listers "github.com/nitisht/minio-operator/pkg/client/listers/minioinstance/v1beta1"
+	informers "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/miniocontroller/v1beta1"
+	listers "github.com/nitisht/minio-operator/pkg/client/listers/miniocontroller/v1beta1"
 	services "github.com/nitisht/minio-operator/pkg/resources/services"
 	statefulsets "github.com/nitisht/minio-operator/pkg/resources/statefulsets"
 )

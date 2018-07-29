@@ -20,7 +20,7 @@ package minio
 
 import (
 	internalinterfaces "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/minioinstance/v1beta1"
+	v1beta1 "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/miniocontroller/v1beta1"
 )
 
 // Interface provides access to each of this group's versions.

@@ -19,7 +19,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	v1beta1 "github.com/nitisht/minio-operator/pkg/apis/minioinstance/v1beta1"
+	v1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	"github.com/nitisht/minio-operator/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"

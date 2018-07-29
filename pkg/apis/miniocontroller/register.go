@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-package minio
+package miniocontroller
 
 const (
-	GroupName = "minio.io"
+	GroupName = "miniocontroller.minio.io"
 )

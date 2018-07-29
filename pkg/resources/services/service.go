@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/minioinstance/v1beta1"
+	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	constants "github.com/nitisht/minio-operator/pkg/constants"
 )
 

@@ -19,7 +19,7 @@ limitations under the License.
 package versioned
 
 import (
-	miniov1beta1 "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/typed/minioinstance/v1beta1"
+	miniov1beta1 "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/typed/miniocontroller/v1beta1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

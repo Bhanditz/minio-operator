@@ -19,7 +19,7 @@ limitations under the License.
 package fake
 
 import (
-	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/minioinstance/v1beta1"
+	miniov1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

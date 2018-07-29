@@ -21,10 +21,10 @@ package v1beta1
 import (
 	time "time"
 
-	minioinstancev1beta1 "github.com/nitisht/minio-operator/pkg/apis/minioinstance/v1beta1"
+	miniocontrollerv1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
 	versioned "github.com/nitisht/minio-operator/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1beta1 "github.com/nitisht/minio-operator/pkg/client/listers/minioinstance/v1beta1"
+	v1beta1 "github.com/nitisht/minio-operator/pkg/client/listers/miniocontroller/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -70,7 +70,7 @@ func NewFilteredMinioInstanceInformer(client versioned.Interface, namespace stri
 				return client.MinioV1beta1().MinioInstances(namespace).Watch(options)
 			},
 		},
-		&minioinstancev1beta1.MinioInstance{},
+		&miniocontrollerv1beta1.MinioInstance{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *minioInstanceInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *minioInstanceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&minioinstancev1beta1.MinioInstance{}, f.defaultInformer)
+	return f.factory.InformerFor(&miniocontrollerv1beta1.MinioInstance{}, f.defaultInformer)
 }
 
 func (f *minioInstanceInformer) Lister() v1beta1.MinioInstanceLister {
