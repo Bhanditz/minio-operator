@@ -226,32 +226,22 @@ func NewForCluster(mi *miniov1beta1.MinioInstance, serviceName string) *appsv1.S
 					Kind:    miniov1beta1.ClusterCRDResourceKind,
 				}),
 			},
-			Labels: map[string]string{
-				constants.InstanceLabel: mi.Name,
-			},
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: &mi.Spec.Replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: podLabels,
+			},
+			ServiceName: serviceName,
+			Replicas:    &mi.Spec.Replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: podLabels,
-					Annotations: map[string]string{
-						"prometheus.io/scrape": "true",
-						"prometheus.io/port":   "8080",
-					},
 				},
 				Spec: corev1.PodSpec{
-					// FIXME: LIMITED TO DEFAULT NAMESPACE. Need to dynamically
-					// create service accounts and (cluster role bindings?)
-					// for each namespace.
-					ServiceAccountName: "mysql-agent",
-					NodeSelector:       mi.Spec.NodeSelector,
-					Affinity:           mi.Spec.Affinity,
-					Containers:         containers,
-					Volumes:            podVolumes,
+					Containers: containers,
+					Volumes:    podVolumes,
 				},
 			},
-			ServiceName: serviceName,
 		},
 	}
 

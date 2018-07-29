@@ -3,4 +3,5 @@ kind: MinioInstance
 metadata:
   name: example-foo
 spec:
+  version: RELEASE.2018-07-23T18-34-49Z
   replicas: 4

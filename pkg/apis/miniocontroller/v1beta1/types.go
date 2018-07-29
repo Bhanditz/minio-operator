@@ -41,8 +41,6 @@ type MinioInstanceSpec struct {
 	Version string `json:"version"`
 	// Replicas defines the number of Minio instances in a MinioInstance resource
 	Replicas int32 `json:"replicas"`
-	// Mode defines the MinioInstance resource type - valid values are "standalone", "distributed" and "gateway"
-	Mode string `json:"mode"`
 	// VolumeClaimTemplate allows a user to specify how volumes inside a MinioInstance
 	// +optional
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
