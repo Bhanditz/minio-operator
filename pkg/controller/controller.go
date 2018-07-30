@@ -20,6 +20,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -48,6 +49,7 @@ import (
 	minioscheme "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/scheme"
 	informers "github.com/nitisht/minio-operator/pkg/client/informers/externalversions/miniocontroller/v1beta1"
 	listers "github.com/nitisht/minio-operator/pkg/client/listers/miniocontroller/v1beta1"
+	constants "github.com/nitisht/minio-operator/pkg/constants"
 	services "github.com/nitisht/minio-operator/pkg/resources/services"
 	statefulsets "github.com/nitisht/minio-operator/pkg/resources/statefulsets"
 )
@@ -332,6 +334,16 @@ func (c *Controller) syncHandler(key string) error {
 		_, err = c.kubeClientSet.AppsV1().StatefulSets(mi.Namespace).Update(ss)
 	}
 
+	// If this container version on the MinioInstance resource is specified, and the
+	// version does not equal the current desired version in the StatefulSet, we
+	// should update the StatefulSet resource.
+	currentVersion := strings.TrimPrefix(ss.Spec.Template.Spec.Containers[0].Image, constants.MinioImagePath+":")
+	if mi.Spec.Version != currentVersion {
+		glog.V(4).Infof("Updating MinioInstance %s Minio server version %d, to: %d", name, mi.Spec.Version, currentVersion)
+		ss = statefulsets.NewForCluster(mi, svc.Name)
+		_, err = c.kubeClientSet.AppsV1().StatefulSets(mi.Namespace).Update(ss)
+	}
+	
 	// If an error occurs during Update, we'll requeue the item so we can
 	// attempt processing again later. THis could have been caused by a
 	// temporary network failure, or any other transient reason.
