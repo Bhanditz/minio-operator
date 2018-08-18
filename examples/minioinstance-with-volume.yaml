@@ -1,0 +1,18 @@
+apiVersion: miniocontroller.minio.io/v1beta1
+kind: MinioInstance
+metadata:
+  name: minio
+spec:
+  replicas: 4
+  credsSecret:
+    # First create this secret using "kubectl create -f examples/minio-creds-secret.yaml"
+    name: minio-creds-secret 
+  volumeClaimTemplate:
+    metadata:
+      name: data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
