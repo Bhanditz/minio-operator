@@ -35,12 +35,6 @@ func (mi *MinioInstance) RequiresSSLSetup() bool {
 	return mi.Spec.SSLSecret != nil
 }
 
-// RequiresCustomConfigMount returns true is the user has provided a secret
-// that contains custom Minio server config file
-func (mi *MinioInstance) RequiresCustomConfigMount() bool {
-	return mi.Spec.ConfigSecret != nil
-}
-
 // EnsureDefaults will ensure that if a user omits and fields in the
 // spec that are required, we set some sensible defaults.
 // For example a user can choose to omit the version

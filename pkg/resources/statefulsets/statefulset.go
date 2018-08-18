@@ -62,17 +62,9 @@ func minioCredentials(mi *miniov1beta1.MinioInstance) []corev1.EnvVar {
 			},
 		}
 	}
-	// If no secret provided, use default credentials
-	return []corev1.EnvVar{
-		{
-			Name:  "MINIO_ACCESS_KEY",
-			Value: constants.DefaultMinioAccessKey,
-		},
-		{
-			Name:  "MINIO_SECRET_KEY",
-			Value: constants.DefaultMinioSecretKey,
-		},
-	}
+	// If no secret provided, dont use env vars. Minio server automatically creates default
+	// credentials
+	return []corev1.EnvVar{}
 }
 
 // Builds the volume mounts for Minio container.
@@ -88,16 +80,6 @@ func volumeMounts(mi *miniov1beta1.MinioInstance) []corev1.VolumeMount {
 		Name:      name,
 		MountPath: constants.MinioVolumeMountPath,
 	})
-
-	// A user may explicitly define a config.json configuration file for
-	// their MinioInstance.
-	if mi.RequiresCustomConfigMount() {
-		mounts = append(mounts, corev1.VolumeMount{
-			Name:      mi.Name + "config",
-			MountPath: "/root/.minio/config.json",
-			SubPath:   "config.json",
-		})
-	}
 
 	if mi.RequiresSSLSetup() {
 		mounts = append(mounts, corev1.VolumeMount{
@@ -147,32 +129,6 @@ func NewForCluster(mi *miniov1beta1.MinioInstance, serviceName string) *appsv1.S
 	if mi.Spec.VolumeClaimTemplate == nil {
 		podVolumes = append(podVolumes, corev1.Volume{Name: constants.MinioVolumeName,
 			VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{Medium: ""}}})
-	}
-
-	// Add Config volume from config secret to the podVolumes
-	if mi.RequiresCustomConfigMount() {
-		podVolumes = append(podVolumes, corev1.Volume{
-			Name: mi.Name + "config",
-			VolumeSource: corev1.VolumeSource{
-				Projected: &corev1.ProjectedVolumeSource{
-					Sources: []corev1.VolumeProjection{
-						{
-							Secret: &corev1.SecretProjection{
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: mi.Spec.ConfigSecret.Name,
-								},
-								Items: []corev1.KeyToPath{
-									{
-										Key:  "config.json",
-										Path: "config.json",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		})
 	}
 
 	// Add SSL volume from SSL secret to the podVolumes

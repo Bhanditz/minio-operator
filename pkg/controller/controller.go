@@ -267,7 +267,7 @@ func (c *Controller) syncHandler(key string) error {
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		runtime.HandleError(fmt.Errorf("invalid resource key: %s", key))
+		runtime.HandleError(fmt.Errorf("Invalid resource key: %s", key))
 		return nil
 	}
 
@@ -276,8 +276,7 @@ func (c *Controller) syncHandler(key string) error {
 	// Get the MinioInstance resource with this namespace/name
 	mi, err := c.minioInstancesLister.MinioInstances(namespace).Get(name)
 	if err != nil {
-		// The MinioInstance resource may no longer exist, in which case we stop
-		// processing.
+		// The MinioInstance resource may no longer exist, in which case we stop processing.
 		if errors.IsNotFound(err) {
 			runtime.HandleError(fmt.Errorf("MinioInstance '%s' in work queue no longer exists", key))
 			return nil
@@ -343,9 +342,9 @@ func (c *Controller) syncHandler(key string) error {
 		ss = statefulsets.NewForCluster(mi, svc.Name)
 		_, err = c.kubeClientSet.AppsV1().StatefulSets(mi.Namespace).Update(ss)
 	}
-	
+
 	// If an error occurs during Update, we'll requeue the item so we can
-	// attempt processing again later. THis could have been caused by a
+	// attempt processing again later. This could have been caused by a
 	// temporary network failure, or any other transient reason.
 	if err != nil {
 		return err

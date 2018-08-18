@@ -41,6 +41,10 @@ type MinioInstanceSpec struct {
 	Version string `json:"version"`
 	// Replicas defines the number of Minio instances in a MinioInstance resource
 	Replicas int32 `json:"replicas"`
+	// If provided, use this secret as the credentials for MinioInstance resource
+	// Otherwise Minio server creates dynamic credentials printed on Minio server startup banner
+	// +optional
+	CredsSecret *corev1.LocalObjectReference `json:"credsSecret,omitempty"`
 	// VolumeClaimTemplate allows a user to specify how volumes inside a MinioInstance
 	// +optional
 	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate,omitempty"`
@@ -52,13 +56,6 @@ type MinioInstanceSpec struct {
 	// If specified, affinity will define the pod's scheduling constraints
 	// +optional
 	Affinity *corev1.Affinity `json:"affinity,omitempty"`
-	// If defined, we use this secret as the credentials for MinioInstance resource
-	// If it is not set we generate credentials dynamically
-	// +optional
-	CredsSecret *corev1.LocalObjectReference `json:"credsSecret,omitempty"`
-	// Config allows a user to specify a custom configuration file for MinioInstance.
-	// +optional
-	ConfigSecret *corev1.LocalObjectReference `json:"configSecret,omitempty"`
 	// SSLSecret allows a user to specify custom CA certificate, and private key for group replication SSL.
 	// +optional
 	SSLSecret *corev1.LocalObjectReference `json:"sslSecret,omitempty"`

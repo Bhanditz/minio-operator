@@ -40,8 +40,8 @@ const MinioVolumeMountPath = "/export"
 // MinioImagePath specifies the Minio Docker hub path
 const MinioImagePath = "minio/minio"
 
-// DefaultMinioImageVersion specifies the Minio Docker hub image
-const DefaultMinioImageVersion = "RELEASE.2018-07-23T18-34-49Z"
+// DefaultMinioImageVersion specifies the latest released Minio Docker hub image
+const DefaultMinioImageVersion = "RELEASE.2018-08-18T03-49-57Z"
 
 // MinioServerName specifies the default container name for MinioInstance
 const MinioServerName = "minio"
