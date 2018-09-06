@@ -75,3 +75,68 @@ type MinioInstanceList struct {
 
 	Items []MinioInstance `json:"items"`
 }
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// Mirror is a backup of a MinioInstance.
+type Mirror struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata"`
+
+	Spec   MirrorSpec   `json:"spec"`
+	Status MirrorStatus `json:"status"`
+}
+
+// MirrorSpec defines the specification for a MinioInstance backup. This includes the source and
+// target where the backup should be stored. Note that both source and target are expected to be AWS S3 API compliant.
+type MirrorSpec struct {
+	// Version defines the Minio Client (mc) Docker image version.
+	Version string `json:"version"`
+	// SourceMinioInstance is the Minio instance to backup.
+	SourceMinioInstance *corev1.LocalObjectReference `json:"srcMinioInstance"`
+	// SourceCredsSecret as the credentials for source Minio instance.
+	SourceCredsSecret *corev1.LocalObjectReference `json:"srcCredsSecret"`
+	// SourceBucket defines the bucket on source Minio instance
+	// +optional
+	SourceBucket string `json:"srcBucket,omitempty"`
+	// Endpoint (hostname only or fully qualified URI) of S3 compatible
+	// storage service.
+	TargetEndpoint string `json:"targetEndpoint"`
+	// CredentialsSecret is a reference to the Secret containing the
+	// credentials authenticating with the S3 compatible storage service.
+	TargetCredsSecret *corev1.LocalObjectReference `json:"targetCredsSecret"`
+	// Bucket in which to store the Backup.
+	TargetBucket string `json:"targetBucket"`
+	// Region in which the Target S3 compatible bucket is located.
+	// +optional
+	Region string `json:"region"`
+	// ForcePathStyle when set to true forces the request to use path-style
+	// addressing, i.e., `http://s3.amazonaws.com/BUCKET/KEY`. By default,
+	// the S3 client will use virtual hosted bucket addressing when possible
+	// (`http://BUCKET.s3.amazonaws.com/KEY`).
+	ForcePathStyle bool `json:"forcePathStyle"`
+}
+
+// MirrorStatus captures the current status of a Mirror operation.
+type MirrorStatus struct {
+	// Outcome holds the results of a Mirror operation.
+	// +optional
+	Outcome string `json:"outcome"`
+	// TimeStarted is the time at which the backup was started.
+	// +optional
+	TimeStarted metav1.Time `json:"timeStarted"`
+	// TimeCompleted is the time at which the backup completed.
+	// +optional
+	TimeCompleted metav1.Time `json:"timeCompleted"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// MirrorList is a list of Backups.
+type MirrorList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata"`
+
+	Items []Mirror `json:"items"`
+}
