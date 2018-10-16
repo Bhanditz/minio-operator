@@ -55,6 +55,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=minio.io.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("minioinstances"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Minio().V1beta1().MinioInstances().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("mirrors"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Minio().V1beta1().Mirrors().Informer()}, nil
 
 	}
 

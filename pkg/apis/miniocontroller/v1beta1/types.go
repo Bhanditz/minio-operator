@@ -89,17 +89,22 @@ type Mirror struct {
 }
 
 // MirrorSpec defines the specification for a MinioInstance backup. This includes the source and
-// target where the backup should be stored. Note that both source and target are expected to be AWS S3 API compliant.
+// target where the backup should be stored. Note that both source and target are expected to be
+// AWS S3 API compliant services.
 type MirrorSpec struct {
 	// Version defines the Minio Client (mc) Docker image version.
 	Version string `json:"version"`
-	// SourceMinioInstance is the Minio instance to backup.
-	SourceMinioInstance *corev1.LocalObjectReference `json:"srcMinioInstance"`
+	// SourceEndpoint is the endpoint of Minio instance to backup.
+	SourceEndpoint string `json:"srcEndpoint"`
 	// SourceCredsSecret as the credentials for source Minio instance.
 	SourceCredsSecret *corev1.LocalObjectReference `json:"srcCredsSecret"`
 	// SourceBucket defines the bucket on source Minio instance
 	// +optional
 	SourceBucket string `json:"srcBucket,omitempty"`
+	// Region in which the source S3 compatible bucket is located.
+	// uses "us-east-1" by default
+	// +optional
+	SourceRegion string `json:"srcRegion"`
 	// Endpoint (hostname only or fully qualified URI) of S3 compatible
 	// storage service.
 	TargetEndpoint string `json:"targetEndpoint"`
@@ -109,13 +114,9 @@ type MirrorSpec struct {
 	// Bucket in which to store the Backup.
 	TargetBucket string `json:"targetBucket"`
 	// Region in which the Target S3 compatible bucket is located.
+	// uses "us-east-1" by default
 	// +optional
-	Region string `json:"region"`
-	// ForcePathStyle when set to true forces the request to use path-style
-	// addressing, i.e., `http://s3.amazonaws.com/BUCKET/KEY`. By default,
-	// the S3 client will use virtual hosted bucket addressing when possible
-	// (`http://BUCKET.s3.amazonaws.com/KEY`).
-	ForcePathStyle bool `json:"forcePathStyle"`
+	TargetRegion string `json:"targetRegion"`
 }
 
 // MirrorStatus captures the current status of a Mirror operation.

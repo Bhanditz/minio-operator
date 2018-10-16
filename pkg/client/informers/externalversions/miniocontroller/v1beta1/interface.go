@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// MinioInstances returns a MinioInstanceInformer.
 	MinioInstances() MinioInstanceInformer
+	// Mirrors returns a MirrorInformer.
+	Mirrors() MirrorInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // MinioInstances returns a MinioInstanceInformer.
 func (v *version) MinioInstances() MinioInstanceInformer {
 	return &minioInstanceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Mirrors returns a MirrorInformer.
+func (v *version) Mirrors() MirrorInformer {
+	return &mirrorInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

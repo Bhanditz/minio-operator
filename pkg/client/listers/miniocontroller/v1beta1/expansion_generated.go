@@ -25,3 +25,11 @@ type MinioInstanceListerExpansion interface{}
 // MinioInstanceNamespaceListerExpansion allows custom methods to be added to
 // MinioInstanceNamespaceLister.
 type MinioInstanceNamespaceListerExpansion interface{}
+
+// MirrorListerExpansion allows custom methods to be added to
+// MirrorLister.
+type MirrorListerExpansion interface{}
+
+// MirrorNamespaceListerExpansion allows custom methods to be added to
+// MirrorNamespaceLister.
+type MirrorNamespaceListerExpansion interface{}

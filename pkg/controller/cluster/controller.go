@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package controller
+package cluster
 
 import (
 	"fmt"
@@ -173,7 +173,7 @@ func NewController(
 
 // Run will set up the event handlers for types we are interested in, as well
 // as syncing informer caches and starting workers. It will block until stopCh
-// is closed, at which point it will shutdown the workqueue and wait for
+// is closed, at which point it w	ill shutdown the workqueue and wait for
 // workers to finish processing their current work items.
 func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) error {
 	defer runtime.HandleCrash()

@@ -32,6 +32,10 @@ func (c *FakeMinioV1beta1) MinioInstances(namespace string) v1beta1.MinioInstanc
 	return &FakeMinioInstances{c, namespace}
 }
 
+func (c *FakeMinioV1beta1) Mirrors(namespace string) v1beta1.MirrorInterface {
+	return &FakeMirrors{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeMinioV1beta1) RESTClient() rest.Interface {

@@ -28,6 +28,7 @@ import (
 type MinioV1beta1Interface interface {
 	RESTClient() rest.Interface
 	MinioInstancesGetter
+	MirrorsGetter
 }
 
 // MinioV1beta1Client is used to interact with features provided by the minio.io.io group.
@@ -37,6 +38,10 @@ type MinioV1beta1Client struct {
 
 func (c *MinioV1beta1Client) MinioInstances(namespace string) MinioInstanceInterface {
 	return newMinioInstances(c, namespace)
+}
+
+func (c *MinioV1beta1Client) Mirrors(namespace string) MirrorInterface {
+	return newMirrors(c, namespace)
 }
 
 // NewForConfig creates a new MinioV1beta1Client for the given config.

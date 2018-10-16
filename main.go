@@ -29,7 +29,7 @@ import (
 
 	clientset "github.com/nitisht/minio-operator/pkg/client/clientset/versioned"
 	informers "github.com/nitisht/minio-operator/pkg/client/informers/externalversions"
-	"github.com/nitisht/minio-operator/pkg/controller"
+	"github.com/nitisht/minio-operator/pkg/controller/cluster"
 	"k8s.io/sample-controller/pkg/signals"
 )
 
@@ -62,7 +62,7 @@ func main() {
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	minioInformerFactory := informers.NewSharedInformerFactory(controllerClient, time.Second*30)
 
-	controller := controller.NewController(kubeClient, controllerClient,
+	controller := cluster.NewController(kubeClient, controllerClient,
 		kubeInformerFactory.Apps().V1().StatefulSets(),
 		minioInformerFactory.Minio().V1beta1().MinioInstances(),
 		kubeInformerFactory.Core().V1().Services())
