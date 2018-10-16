@@ -28,7 +28,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -288,7 +287,7 @@ func (c *Controller) syncHandler(key string) error {
 
 	svc, err := c.serviceLister.Services(mi.Namespace).Get(mi.Name)
 	// If the resource doesn't exist, we'll create it
-	if apierrors.IsNotFound(err) {
+	if errors.IsNotFound(err) {
 		glog.V(2).Infof("Creating a new Service for cluster %q", nsName)
 		svc = services.NewForCluster(mi)
 		_, err = c.kubeClientSet.CoreV1().Services(svc.Namespace).Create(svc)
