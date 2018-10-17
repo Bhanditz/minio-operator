@@ -19,13 +19,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	v1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
+	scheme "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
-
-	v1beta1 "github.com/nitisht/minio-operator/pkg/apis/miniocontroller/v1beta1"
-	scheme "github.com/nitisht/minio-operator/pkg/client/clientset/versioned/scheme"
 )
 
 // MirrorsGetter has a method to return a MirrorInterface.
