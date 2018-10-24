@@ -26,8 +26,10 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	clientset "github.com/nitisht/minio-operator/pkg/client/clientset/versioned"
@@ -35,21 +37,29 @@ import (
 	"github.com/nitisht/minio-operator/pkg/controller/cluster"
 )
 
-var (
-	masterURL  string
-	kubeconfig string
-)
-
+var masterURL string
+var kubeconfig string
 var onlyOneSignalHandler = make(chan struct{})
 var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
 
-func main() {
-	flag.Parse()
+func init() {
+	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
+	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
+}
 
+func main() {
 	// set up signals so we handle the first shutdown signal gracefully
 	stopCh := setupSignalHandler()
 
-	cfg, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+	flag.Parse()
+
+	// Look for incluster config by default
+	cfg, err := rest.InClusterConfig()
+	// If config is passed as a flag use that instead
+	if kubeconfig != "" {
+		cfg, err = clientcmd.BuildConfigFromFlags(masterURL, kubeconfig)
+	}
+
 	if err != nil {
 		glog.Fatalf("Error building kubeconfig: %s", err.Error())
 	}
@@ -84,7 +94,8 @@ func main() {
 // which is closed on one of these signals. If a second signal is caught, the program
 // is terminated with exit code 1.
 func setupSignalHandler() (stopCh <-chan struct{}) {
-	close(onlyOneSignalHandler) // panics when called twice
+	// panics when called twice
+	close(onlyOneSignalHandler)
 
 	stop := make(chan struct{})
 	c := make(chan os.Signal, 2)
@@ -93,13 +104,9 @@ func setupSignalHandler() (stopCh <-chan struct{}) {
 		<-c
 		close(stop)
 		<-c
-		os.Exit(1) // second signal. Exit directly.
+		// second signal. Exit directly.
+		os.Exit(1)
 	}()
 
 	return stop
-}
-
-func init() {
-	flag.StringVar(&kubeconfig, "kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
-	flag.StringVar(&masterURL, "master", "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 }

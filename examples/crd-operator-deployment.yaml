@@ -9,4 +9,18 @@ spec:
     kind: MinioInstance
     plural: minioinstances
   scope: Namespaced
-  
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: minio-operator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: minio-operator
+    spec:
+      containers:
+      - name: minio-operator
+        image: nitishtiwari/operator:latest
